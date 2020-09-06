@@ -1,0 +1,40 @@
+require:
+  - rubocop-performance
+AllCops:
+  TargetRubyVersion: '2.3'
+Layout/LineLength:
+  Enabled: false
+Layout/SpaceAroundEqualsInParameterDefault:
+  EnforcedStyle: no_space
+Lint/EmptyWhen:
+  Enabled: false
+Lint/Void:
+  Enabled: false
+Metrics/AbcSize:
+    Max: 17
+Metrics/ClassLength:
+    Max: 200
+Metrics/MethodLength:
+    Max: 20
+Style/AccessModifierDeclarations:
+  Enabled: false
+Style/AsciiComments:
+  Enabled: false
+Style/Encoding:
+  Enabled: false
+Style/EvalWithLocation:
+  Enabled: false
+Style/FormatString:
+  EnforcedStyle: percent
+Style/FormatStringToken:
+  EnforcedStyle: unannotated
+Style/PerlBackrefs:
+  Enabled: false
+Style/RedundantSelf:
+  Enabled: false
+Style/StructInheritance:
+  Enabled: false
+Style/TrailingCommaInArrayLiteral:
+  Enabled: false
+Style/TrailingCommaInHashLiteral:
+  Enabled: false

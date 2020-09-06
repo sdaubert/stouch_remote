@@ -1,0 +1,17 @@
+#!/usr/bin/env -S ruby -w
+# frozen_string_literal: true
+
+require 'stouch_remote'
+
+logger = Logger.new(STDOUT)
+logger.level = Logger::INFO
+
+
+conn = STouchRemote::Connection.new('192.168.1.70', 8080, logger: logger)
+
+logger.info { 'Start..' }
+conn.start
+
+logger.info { 'get Info' }
+conn.send('info')
+conn.close
