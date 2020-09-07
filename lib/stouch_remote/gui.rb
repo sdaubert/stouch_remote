@@ -20,13 +20,17 @@ module STouchRemote
 
       signal_connect 'startup' do |application|
         conn.logger.info { 'App startup' }
-        @main_window = Gui::MainWindow.new(application)
+        @main_window = Gui::MainWindow.new(application, conn)
         @main_window.present
+        @main_window.show_all
       end
 
       signal_connect 'activate' do
-        conn.logger.info { 'App activation' }
-        @main_window.show_all
+        logger.info { 'App activation' }
+        GLib::Timeout.add(100) do
+          main_window.on_connect
+          false
+        end
       end
     end
 

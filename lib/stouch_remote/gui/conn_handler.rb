@@ -17,8 +17,17 @@ module STouchRemote
         #device_name = "#{name} (type: #{type}, id: #{conn.device_id})"
         device_name = "#{name} (#{ipaddr})"
         conn.logger.info { 'Device: %s' % device_name }
-        conn.logger.warn { app.windows.inspect }
         app.main_window.device_name_label.text = device_name
+      end
+
+      def now_playing(xml)
+        now_playing = xml.xpath('//nowPlaying').first
+        source = now_playing['source']
+
+        case source
+        when 'STANDBY'
+          app.main_window.set_source(:standby)
+        end
       end
     end
   end

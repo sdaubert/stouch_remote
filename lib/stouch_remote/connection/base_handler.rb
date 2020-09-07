@@ -19,10 +19,10 @@ module STouchRemote
         case hdr['url']
         when 'info'
           info(msg)
-        #when 'now_playing'
-        #  now_playing(msg)
-        #when 'volume'
-        #  volume(msg)
+        when 'now_playing'
+          now_playing(msg)
+        when 'volume'
+          volume(msg)
         end
       end
 
@@ -35,6 +35,8 @@ module STouchRemote
       end
 
       def info(xml); end
+      def now_playing(xml); end
+      def volume(xml); end
     end
   end
 end
