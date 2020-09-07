@@ -29,6 +29,7 @@ Gem::Specification.new do |spec|
 
   spec.add_dependency 'nokogiri', '~> 1.10'
   spec.add_dependency 'websocket-driver', '~> 0.7'
+  spec.add_dependency 'gtk3'
 
   spec.add_development_dependency 'bundler', '~> 2.0'
   spec.add_development_dependency 'rake', '~> 10.0'

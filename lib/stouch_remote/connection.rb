@@ -28,6 +28,9 @@ module STouchRemote
     # @return [Logger]
     attr_reader :logger
 
+    # @return [Connection::BaseHandler]
+    attr_reader :handler
+
     # @private maximum bytes to receive from TCP socket
     MAXRECV = 2048
 
@@ -42,11 +45,11 @@ module STouchRemote
     # @options opts [Logger] :logger
     # @options opts [:debug, :info, :warn, :error] :logger_severity
     def initialize(host, port, opts={})
+      @host, @port = host, port
       @url = 'ws://%s:%u' % [host, port]
       @req_id = 1
       @device_id = nil
       @driver = WebSocket::Driver.client(self, protocols: ['gabbo'])
-      @socket = TCPSocket.new(host, port)
       @logger = initialize_logger(opts)
       @handler = Connection::BaseHandler.new(self)
     end
@@ -58,6 +61,8 @@ module STouchRemote
     # @return [self]
     # @raise [CannotConnectError]
     def start
+      @socket = TCPSocket.new(@host, @port)
+
       set_callbacks
       handshake
       sleep 0.2
@@ -100,6 +105,7 @@ module STouchRemote
     # @return [void]
     def set_handler(handler)
       @handler = handler.new(self)
+      set_callbacks
     end
 
     def close

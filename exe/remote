@@ -2,16 +2,11 @@
 # frozen_string_literal: true
 
 require 'stouch_remote'
+require 'stouch_remote/gui'
 
 logger = Logger.new(STDOUT)
 logger.level = Logger::INFO
 
-
 conn = STouchRemote::Connection.new('192.168.1.70', 8080, logger: logger)
-
-logger.info { 'Start..' }
-conn.start
-
-logger.info { 'get Info' }
-conn.send('info')
-conn.close
+ui = STouchRemote::Gui.new(conn, logger)
+ui.run

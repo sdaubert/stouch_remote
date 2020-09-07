@@ -18,7 +18,7 @@ module STouchRemote
 
         case hdr['url']
         when 'info'
-          get_info(msg)
+          info(msg)
         #when 'now_playing'
         #  now_playing(msg)
         #when 'volume'
@@ -34,13 +34,7 @@ module STouchRemote
         conn.logger.warning { "on_close: #{e.inspect}" }
       end
 
-      def get_info(xml)
-        if conn.device_id.nil?
-          info = xml.xpath('//info')[1]
-          conn.device_id = info['deviceID']
-        end
-        conn.logger.info { "Got deviceID: #{conn.device_id}" }
-      end
+      def info(xml); end
     end
   end
 end
