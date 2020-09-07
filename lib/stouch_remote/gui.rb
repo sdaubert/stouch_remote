@@ -38,3 +38,4 @@ end
 
 require_relative 'gui/conn_handler'
 require_relative 'gui/main_window'
+require_relative 'gui/about_dialog'

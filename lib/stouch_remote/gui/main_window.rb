@@ -10,6 +10,7 @@ module STouchRemote
           set_template data: File.read(File.join(__dir__, 'main_window.ui'))
 
           bind_template_child 'quit_menuitem'
+          bind_template_child 'about_menuitem'
           bind_template_child 'device_name_label'
           bind_template_child 'progressbar'
         end
@@ -18,6 +19,9 @@ module STouchRemote
       def initialize(application)
         super application: application
 
+        about_menuitem.signal_connect 'activate' do
+          Gui::AboutDialog.new.show_all
+        end
         quit_menuitem.signal_connect 'activate' do
           on_quit
         end
