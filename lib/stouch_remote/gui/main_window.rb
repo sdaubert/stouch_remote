@@ -16,12 +16,14 @@ module STouchRemote
           bind_template_child 'quit_menuitem'
           bind_template_child 'about_menuitem'
           bind_template_child 'device_name_label'
-          bind_template_child 'progressbar'
+          bind_template_child 'main_grid'
           bind_template_child 'prev_button'
           bind_template_child 'play_pause_button'
           bind_template_child 'next_button'
           bind_template_child 'title_label'
           bind_template_child 'title_image'
+          bind_template_child 'main_spinner'
+          bind_template_child 'info_label'
         end
       end
 

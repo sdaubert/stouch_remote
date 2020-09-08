@@ -8,6 +8,7 @@ module STouchRemote
     attr_reader :conn
     attr_reader :logger
     attr_reader :main_window
+    attr_reader :connected
 
     def initialize(conn, logger)
       super 'org.gtk.stouch-remote'
@@ -17,6 +18,7 @@ module STouchRemote
       @conn = conn
       @logger = logger
       @main_window = nil
+      @connected = false
 
       signal_connect 'startup' do |application|
         conn.logger.info { 'App startup' }
@@ -36,6 +38,11 @@ module STouchRemote
 
     def set_device(str)
       @builder['label_device_name'].set_markup(str)
+    end
+
+    def connected=(val)
+      main_window.main_grid.sensitive = val
+      @connected = val
     end
   end
 end
