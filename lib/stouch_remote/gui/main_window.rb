@@ -44,7 +44,7 @@ module STouchRemote
         end
       end
 
-      def set_source(type, label:, image:)
+      def set_source(type, label: nil, image: nil)
         case type
         when :standby
           title_label.text = 'No title'
@@ -52,10 +52,34 @@ module STouchRemote
         end
       end
 
+      def info(text)
+        info_label.text = text
+        application.logger.info { text }
+      end
+
+      def warn(text)
+        info_label.markup = "<span fgcolor=\"#ff7f7f\" font_weight=\"bold\">#{text}</span>"
+        application.logger.warn { text }
+      end
+
       def on_connect
-        conn.start
-        conn.send('info')
-        conn.send('now_playing')
+        info_label.text = 'Connecting...'
+        main_spinner.start
+
+        begin
+          conn.start
+          conn.send('info')
+          conn.send('now_playing')
+          info('Connected to %s' % conn.device_id)
+
+          application.connected = true
+        rescue SystemCallError
+          warn('cannot connect to %s' % conn.url)
+          device_name_label.text = 'None'
+          application.connected = false
+        end
+
+        main_spinner.stop
       end
 
       def on_quit
