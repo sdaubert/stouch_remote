@@ -57,7 +57,6 @@ module STouchRemote
       end
 
       def on_quit
-        application.logger.warn { "#{self.class}#quit" }
         application.quit
       end
     end
