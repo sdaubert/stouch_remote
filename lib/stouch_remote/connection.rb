@@ -109,16 +109,28 @@ module STouchRemote
     def wait_async_events
       @thread = Thread.new do
         loop do
-          receive
+          receive(nonblock: true)
           sleep 1
+        rescue StandardError => e
+          logger.warn { e.to_s }
+          retry
         end
       end
     end
 
-    def receive
-      data = @socket_mutex.synchronize { socket.recv(MAXRECV) }
+    def receive(nonblock: false)
+      data = @socket_mutex.synchronize do
+        if nonblock
+          socket.recv_nonblock(MAXRECV)
+        else
+          socket.recv(MAXRECV)
+        end
+      end
+
       logger.debug { 'Got (%u): %s' % [data.size, data.inspect] }
       driver.parse(data)
+    rescue IO::WaitReadable
+      sleep 1
     end
 
     # Set handler
@@ -132,6 +144,13 @@ module STouchRemote
     def close
       @thread.kill
       driver.close
+    end
+
+    def volume(value=nil, async: false)
+      return send('volume', async: async) if value.nil?
+
+      # send('volume', info: 'mainNode="volume"', body: "<volume>#{value}</volume>", async: async)
+      send('volume', body: "<volume>#{value}</volume>", async: async)
     end
 
     private
