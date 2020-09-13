@@ -39,6 +39,13 @@ module STouchRemote
         end
       end
 
+      def volume(xml)
+        volume = xml.xpath('//volume').first
+        value = (volume > 'actualvolume').text.to_i
+        conn.logger.info { 'Volume at %u' % value }
+        app.main_window.volume_button.value = value
+      end
+
       private
 
       def get_device_id(xml)

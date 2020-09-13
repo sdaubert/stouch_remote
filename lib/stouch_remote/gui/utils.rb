@@ -1,9 +1,9 @@
 # frozen_string_literal: true
+
 require 'uri'
 require 'httparty'
 
 module STouchRemote
-
   # Base directory to save files
   SAVE_DIR = '/tmp'
   # Prefix of saved files

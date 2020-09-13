@@ -23,6 +23,7 @@ module STouchRemote
           bind_template_child 'title_label'
           bind_template_child 'title_image'
           bind_template_child 'info_label'
+          bind_template_child 'volume_button'
         end
       end
 
@@ -71,26 +72,17 @@ module STouchRemote
       def on_connect
         conn.start
         conn.send('info')
+        conn.send('volume')
         conn.send('now_playing')
         info('Connected to %s' % conn.name)
         application.connected = true
 
         conn.wait_async_events
-
-        #update_query unless application.data.source.nil?
       rescue SystemCallError
         warn('cannot connect to %s' % conn.url)
         device_name_label.text = 'None'
         application.connected = false
       end
-
-      #def update_query
-      #  source = application.data.source
-      #  account = application.data.account
-      #  conn.send('swUpdateQuery',
-      #            request: '<sourceItem source="%s" sourceAccount="%s"/>' % [source, account],
-      #            body: '<swUpdateQuery/>')
-      #end
 
       def on_quit
         application.quit
@@ -100,7 +92,6 @@ module STouchRemote
 
       def cache_art_url(art_url, artist:, album:)
         return if @art_url == art_url
-
 
         conn.logger.info { 'Download art at %s' % art_url }
         @art_url = art_url
