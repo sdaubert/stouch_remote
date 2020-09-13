@@ -1,7 +1,5 @@
-require:
-  - rubocop-performance
 AllCops:
-  TargetRubyVersion: '2.3'
+  TargetRubyVersion: '2.5'
 Layout/LineLength:
   Enabled: false
 Layout/SpaceAroundEqualsInParameterDefault:
@@ -11,7 +9,7 @@ Lint/EmptyWhen:
 Lint/Void:
   Enabled: false
 Metrics/AbcSize:
-    Max: 17
+    Max: 25
 Metrics/ClassLength:
     Max: 200
 Metrics/MethodLength:
