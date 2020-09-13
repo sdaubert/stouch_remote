@@ -34,6 +34,7 @@ module STouchRemote
         @source = nil
         @account = nil
         @art_url = nil
+        @do_not_reemit_volume = false
 
         connect_menuitem.signal_connect 'activate' do
           on_connect
@@ -44,6 +45,10 @@ module STouchRemote
 
         about_menuitem.signal_connect 'activate' do
           Gui::AboutDialog.new.show_all
+        end
+
+        volume_button.signal_connect 'value-changed' do |_button, value|
+          on_volume_changed(value.to_i)
         end
       end
 
@@ -72,7 +77,7 @@ module STouchRemote
       def on_connect
         conn.start
         conn.send('info')
-        conn.send('volume')
+        conn.volume
         conn.send('now_playing')
         info('Connected to %s' % conn.name)
         application.connected = true
@@ -86,6 +91,18 @@ module STouchRemote
 
       def on_quit
         application.quit
+      end
+
+      def on_volume_changed(value)
+        return if @do_not_reemit_volume
+
+        conn.volume(value, async: true)
+      end
+
+      def volume_button_value=(value)
+        @do_not_reemit_volume = true
+        volume_button.value = value
+        @do_not_reemit_volume = false
       end
 
       private

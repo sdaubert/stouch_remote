@@ -43,7 +43,8 @@ module STouchRemote
         volume = xml.xpath('//volume').first
         value = (volume > 'actualvolume').text.to_i
         conn.logger.info { 'Volume at %u' % value }
-        app.main_window.volume_button.value = value
+
+        app.main_window.volume_button_value = value
       end
 
       private
