@@ -1,4 +1,4 @@
-require 'gtk3'
+# frozen_string_literal: true
 
 module STouchRemote
   class Gui
@@ -22,7 +22,6 @@ module STouchRemote
           bind_template_child 'next_button'
           bind_template_child 'title_label'
           bind_template_child 'title_image'
-          bind_template_child 'main_spinner'
           bind_template_child 'info_label'
         end
       end
@@ -31,6 +30,9 @@ module STouchRemote
         super application: application
 
         @conn = conn
+        @source = nil
+        @account = nil
+        @art_url = nil
 
         connect_menuitem.signal_connect 'activate' do
           on_connect
@@ -44,11 +46,15 @@ module STouchRemote
         end
       end
 
-      def set_source(type, label: nil, image: nil)
+      def set_source(type, track: nil, artist: nil, album: nil, art_url: nil)
         case type
         when :standby
           title_label.text = 'No title'
           title_image.stock = Gtk::Stock::MISSING_IMAGE
+        when :playing
+          label = "<b>#{track}</b>\n#{artist}\n#{album}"
+          title_label.markup = label
+          cache_art_url(art_url, artist: artist, album: album)
         end
       end
 
@@ -63,27 +69,44 @@ module STouchRemote
       end
 
       def on_connect
-        info_label.text = 'Connecting...'
-        main_spinner.start
+        conn.start
+        conn.send('info')
+        conn.send('now_playing')
+        info('Connected to %s' % conn.name)
+        application.connected = true
 
-        begin
-          conn.start
-          conn.send('info')
-          conn.send('now_playing')
-          info('Connected to %s' % conn.device_id)
+        conn.wait_async_events
 
-          application.connected = true
-        rescue SystemCallError
-          warn('cannot connect to %s' % conn.url)
-          device_name_label.text = 'None'
-          application.connected = false
-        end
-
-        main_spinner.stop
+        #update_query unless application.data.source.nil?
+      rescue SystemCallError
+        warn('cannot connect to %s' % conn.url)
+        device_name_label.text = 'None'
+        application.connected = false
       end
+
+      #def update_query
+      #  source = application.data.source
+      #  account = application.data.account
+      #  conn.send('swUpdateQuery',
+      #            request: '<sourceItem source="%s" sourceAccount="%s"/>' % [source, account],
+      #            body: '<swUpdateQuery/>')
+      #end
 
       def on_quit
         application.quit
+      end
+
+      private
+
+      def cache_art_url(art_url, artist:, album:)
+        return if @art_url == art_url
+
+
+        conn.logger.info { 'Download art at %s' % art_url }
+        @art_url = art_url
+        fname = Utils.download(art_url, basename: "#{artist}-#{album}")
+        conn.logger.debug { 'Download to %s' % fname }
+        title_image.set_from_file(fname)
       end
     end
   end

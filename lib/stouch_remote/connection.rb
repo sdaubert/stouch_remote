@@ -4,6 +4,7 @@ require 'websocket/driver'
 require 'nokogiri'
 require 'socket'
 require 'logger'
+require 'thread'
 
 require_relative 'connection/base_handler'
 
@@ -25,6 +26,10 @@ module STouchRemote
     # @return [nil,String]
     attr_accessor :device_id
 
+    # SoundTouch device name
+    # @return [String]
+    attr_accessor :name
+
     # @return [Logger]
     attr_reader :logger
 
@@ -35,9 +40,9 @@ module STouchRemote
     MAXRECV = 2048
 
     # @private Message to send format
-    MSG = '<msg><header deviceID="%<device_id>s" url="%<url>s" method="%<method>s">' +
-          '<request requestID="%<req_id>d"><info %<info>s type="%<type>s"/></request>' +
-          '</header>%<body>s</msg>'
+    MSG = '<msg><header deviceID="%s" url="%s" method="%s">' \
+          '<request requestID="%d"><info %s type="%s"/>%s</request>' \
+          '</header>%s</msg>'
 
     # @param [String] host
     # @param [Integer] port
@@ -45,10 +50,12 @@ module STouchRemote
     # @options opts [Logger] :logger
     # @options opts [:debug, :info, :warn, :error] :logger_severity
     def initialize(host, port, opts={})
-      @host, @port = host, port
+      @host = host
+      @port = port
       @url = 'ws://%s:%u' % [host, port]
       @req_id = 1
       @device_id = nil
+      @name = 'No device'
       @driver = WebSocket::Driver.client(self, protocols: ['gabbo'])
       @logger = initialize_logger(opts)
       @handler = Connection::BaseHandler.new(self)
@@ -62,6 +69,7 @@ module STouchRemote
     # @raise [CannotConnectError]
     def start
       @socket = TCPSocket.new(@host, @port)
+      @socket_mutex = Mutex.new
 
       set_callbacks
       handshake
@@ -74,7 +82,7 @@ module STouchRemote
     # @param [String] data data to send over {#socket}
     # @return [void]
     def write(data)
-      socket.send(data, 0)
+      @socket_mutex.synchronize { socket.send(data, 0) }
     end
 
     # Send a request
@@ -84,18 +92,31 @@ module STouchRemote
     # @param [String] type
     # @param [String] body
     # @return [String]
-    def send(url, request: '', info: '', type: 'new', body: '')
-      msg = MSG % { device_id: device_id, url: url, method: method(body),
-                    req_id: req_id, request: request, info: info, type: type,
-                    body: to_body(body) }
+    def send(url, request: '', info: '', type: 'new', body: '', async: false)
+      msg = MSG % [device_id, url, method(body), req_id, info,
+                   type, request, to_body(body)]
 
       logger.debug { 'Send message: %s' % msg }
       status = driver.text(msg)
-      logger.debug { 'Send statud: %s' % status }
-      sleep 1
+      logger.debug { 'Send status: %s' % status }
 
-      logger.debug { 'Get dat from TCP socket' }
-      data = socket.recv(MAXRECV)
+      return if async
+
+      logger.debug { 'Get data from TCP socket' }
+      receive
+    end
+
+    def wait_async_events
+      @thread = Thread.new do
+        loop do
+          receive
+          sleep 1
+        end
+      end
+    end
+
+    def receive
+      data = @socket_mutex.synchronize { socket.recv(MAXRECV) }
       logger.debug { 'Got (%u): %s' % [data.size, data.inspect] }
       driver.parse(data)
     end
@@ -103,12 +124,13 @@ module STouchRemote
     # Set handler
     # @param [Class] handler
     # @return [void]
-    def set_handler(handler)
+    def handler=(handler)
       @handler = handler.new(self)
       set_callbacks
     end
 
     def close
+      @thread.kill
       driver.close
     end
 
@@ -136,10 +158,10 @@ module STouchRemote
       sleep 0.2
 
       handshake = socket.recv(MAXRECV)
-      logger.debug("Handshake response: %s" % handshake)
+      logger.debug('Handshake response: %s' % handshake)
 
       driver.parse(handshake)
-      logger.debug("Driver state: %s" % driver.state)
+      logger.debug('Driver state: %s' % driver.state)
       raise CannotConnectError unless driver.state == :open
     end
 
