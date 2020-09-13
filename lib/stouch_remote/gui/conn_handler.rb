@@ -23,8 +23,8 @@ module STouchRemote
 
         now_playing = xml.xpath('//nowPlaying').first
         source = now_playing['source']
-        app.data.source = source
-        app.data.account = now_playing['sourceAccount']
+        app.source.source = source
+        app.source.account = now_playing['sourceAccount']
 
         case source
         when 'STANDBY'

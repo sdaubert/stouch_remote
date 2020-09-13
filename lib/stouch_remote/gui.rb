@@ -9,7 +9,7 @@ module STouchRemote
     attr_reader :logger
     attr_reader :main_window
     attr_reader :connected
-    attr_reader :data
+    attr_reader :source
 
     def initialize(conn, logger)
       super 'org.gtk.stouch-remote'
@@ -20,7 +20,7 @@ module STouchRemote
       @logger = logger
       @main_window = nil
       @connected = false
-      @data = Data.new
+      @source = Data::Source.new
 
       connect_startup
       connect_activate
@@ -62,4 +62,4 @@ require_relative 'gui/conn_handler'
 require_relative 'gui/main_window'
 require_relative 'gui/about_dialog'
 require_relative 'gui/utils'
-require_relative 'data'
+require_relative 'gui/data'
