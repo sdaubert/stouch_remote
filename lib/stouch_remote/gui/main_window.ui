@@ -254,8 +254,44 @@ audio-volume-medium-symbolic</property>
               </object>
               <packing>
                 <property name="left_attach">0</property>
+                <property name="top_attach">5</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkProgressBar" id="time_progressbar">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+              </object>
+              <packing>
+                <property name="left_attach">0</property>
+                <property name="top_attach">4</property>
+                <property name="width">3</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkLabel" id="elapsed_time_label">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="single_line_mode">True</property>
+              </object>
+              <packing>
+                <property name="left_attach">0</property>
                 <property name="top_attach">3</property>
               </packing>
+            </child>
+            <child>
+              <object class="GtkLabel" id="total_time_label">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="single_line_mode">True</property>
+              </object>
+              <packing>
+                <property name="left_attach">2</property>
+                <property name="top_attach">3</property>
+              </packing>
+            </child>
+            <child>
+              <placeholder/>
             </child>
             <child>
               <placeholder/>

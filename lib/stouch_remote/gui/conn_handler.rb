@@ -68,7 +68,11 @@ module STouchRemote
         forward_enabled = !(xml > 'skipEnabled').empty?
         backward_enabled = !(xml > 'skipPreviousEnabled').empty?
 
-        Data::Playing.new(status, track, artist, album, art_url, forward_enabled, backward_enabled)
+        time = (xml > 'time').first
+        elapsed = time.text.to_i
+        total = time['total'].to_i
+
+        Data::Playing.new(status, track, artist, album, art_url, forward_enabled, backward_enabled, elapsed, total)
       end
     end
   end
