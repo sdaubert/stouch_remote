@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require 'uri'
+require 'fileutils'
 require 'httparty'
 
 module STouchRemote
@@ -17,7 +18,7 @@ module STouchRemote
       uri = URI(url)
       basename ||= uri.path.split('/').last
       basename = basename.tr(' ', '_')
-      fname = File.join(SAVE_DIR, "#{PREFIX}-#{basename}")
+      fname = File.join(SAVE_DIR, "#{PREFIX}#{basename}")
       puts "fname: #{fname}"
 
       resp = HTTParty.get(uri)
@@ -29,6 +30,16 @@ module STouchRemote
       end
 
       fname
+    end
+
+    # Remove files older than +older+ seconds
+    # @param [Integer] older
+    # @return [void]
+    def self.clean_up_art_files(older)
+      limit = Time.now - older
+      Dir.glob(File.join(SAVE_DIR, "#{PREFIX}*")).each do |file|
+        FileUtils.rm(file, force: true) if File.stat(file).ctime < limit
+      end
     end
   end
 end

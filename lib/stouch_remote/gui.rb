@@ -11,6 +11,9 @@ module STouchRemote
     attr_reader :connected
     attr_reader :source
 
+    # Clean up art files evry 30 min
+    CLEAN_TMP_PERIOD = 30 * 60
+
     def initialize(conn, logger)
       super 'org.gtk.stouch-remote'
 
@@ -53,7 +56,17 @@ module STouchRemote
           main_window.on_connect
           false
         end
+
+        clean_up_art_files
+        GLib::Timeout.add(CLEAN_TMP_PERIOD * 1000) do
+          clean_up_art_files
+          true
+        end
       end
+    end
+
+    def clean_up_art_files
+      Utils.clean_up_art_files(CLEAN_TMP_PERIOD)
     end
   end
 end
