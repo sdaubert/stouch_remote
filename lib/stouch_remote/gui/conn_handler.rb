@@ -30,12 +30,9 @@ module STouchRemote
         when 'STANDBY'
           app.main_window.set_source(:standby)
         when 'DEEZER'
-          track = (now_playing > 'track').text
-          artist = (now_playing > 'artist').text
-          album = (now_playing > 'album').text
-          art_url = (now_playing > 'art').text
+          data = now_playing_data(now_playing)
 
-          app.main_window.set_source(:playing, track: track, artist: artist, album: album, art_url: art_url)
+          app.main_window.set_source(data.status, data: data)
         end
       end
 
@@ -59,6 +56,19 @@ module STouchRemote
         conn.name = name
 
         app.logger.debug { 'deviceID: %s' % conn.device_id }
+      end
+
+      def now_playing_data(xml)
+        track = (xml > 'track').text
+        artist = (xml > 'artist').text
+        album = (xml > 'album').text
+        art_url = (xml > 'art').text
+        status = (xml > 'playStatus').text == 'PAUSE_STATE' ? :pause : :playing
+
+        forward_enabled = !(xml > 'skipEnabled').empty?
+        backward_enabled = !(xml > 'skipPreviousEnabled').empty?
+
+        Data::Playing.new(status, track, artist, album, art_url, forward_enabled, backward_enabled)
       end
     end
   end

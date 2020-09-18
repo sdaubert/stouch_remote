@@ -52,15 +52,21 @@ module STouchRemote
         end
       end
 
-      def set_source(type, track: nil, artist: nil, album: nil, art_url: nil)
+      def set_source(type, data: nil)
         case type
         when :standby
           title_label.text = 'No title'
           title_image.stock = Gtk::Stock::MISSING_IMAGE
-        when :playing
-          label = "<b>#{track}</b>\n#{artist}\n#{album}"
+          play_pause_button.child.stock = Gtk::Stock::MEDIA_PLAY
+        when :playing, :pause
+          label = "<b>#{data.track}</b>\n#{data.artist}\n#{data.album}"
           title_label.markup = label
-          cache_art_url(art_url, artist: artist, album: album)
+          play_pause_button.child.stock = if type == :pause
+                                            Gtk::Stock::MEDIA_PLAY
+                                          else
+                                            Gtk::Stock::MEDIA_PAUSE
+                                          end
+          cache_art_url(data)
         end
       end
 
@@ -107,12 +113,12 @@ module STouchRemote
 
       private
 
-      def cache_art_url(art_url, artist:, album:)
-        return if @art_url == art_url
+      def cache_art_url(data)
+        return if @art_url == data.art_url
 
-        conn.logger.info { 'Download art at %s' % art_url }
-        @art_url = art_url
-        fname = Utils.download(art_url, basename: "#{artist}-#{album}")
+        conn.logger.info { 'Download art at %s' % data.art_url }
+        @art_url = data.art_url
+        fname = Utils.download(data.art_url, basename: "#{data.artist}-#{data.album}")
         conn.logger.debug { 'Download to %s' % fname }
         title_image.set_from_file(fname)
       end
