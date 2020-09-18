@@ -153,7 +153,23 @@ module STouchRemote
       send('volume', body: "<volume>#{value}</volume>", async: async)
     end
 
+    def play_pause
+      key 'PLAY_PAUSE'
+    end
+
+    def next_track
+      key 'NEXT_TRACK'
+    end
+
+    def prev_track
+      key 'PREV_TRACK'
+    end
+
     private
+
+    def key(name, state: 'press')
+      send('key', body: '<key state="%s" sender="Gabbo">%s</key>' % [state, name])
+    end
 
     def initialize_logger(opts={})
       logger = opts[:logger] || Logger.new(STDOUT)

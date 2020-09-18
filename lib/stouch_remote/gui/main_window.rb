@@ -50,6 +50,16 @@ module STouchRemote
         volume_button.signal_connect 'value-changed' do |_button, value|
           on_volume_changed(value.to_i)
         end
+
+        play_pause_button.signal_connect 'clicked' do
+          on_play_pause_clicked
+        end
+        prev_button.signal_connect 'clicked' do
+          on_prev_clicked
+        end
+        next_button.signal_connect 'clicked' do
+          on_next_clicked
+        end
       end
 
       def set_source(type, data: nil)
@@ -66,6 +76,7 @@ module STouchRemote
                                           else
                                             Gtk::Stock::MEDIA_PAUSE
                                           end
+          manage_navigation_buttons(data)
           cache_art_url(data)
         end
       end
@@ -73,6 +84,12 @@ module STouchRemote
       def info(text)
         info_label.text = text
         application.logger.info { text }
+      end
+
+      def volume_button_value=(value)
+        @do_not_reemit_volume = true
+        volume_button.value = value
+        @do_not_reemit_volume = false
       end
 
       def warn(text)
@@ -105,10 +122,16 @@ module STouchRemote
         conn.volume(value, async: true)
       end
 
-      def volume_button_value=(value)
-        @do_not_reemit_volume = true
-        volume_button.value = value
-        @do_not_reemit_volume = false
+      def on_play_pause_clicked
+        conn.play_pause
+      end
+
+      def on_prev_clicked
+        conn.prev_track
+      end
+
+      def on_next_clicked
+        conn.next_track
       end
 
       private
@@ -121,6 +144,11 @@ module STouchRemote
         fname = Utils.download(data.art_url, basename: "#{data.artist}-#{data.album}")
         conn.logger.debug { 'Download to %s' % fname }
         title_image.set_from_file(fname)
+      end
+
+      def manage_navigation_buttons(data)
+        prev_button.sensitive = data.backward_enabled
+        next_button.sensitive = data.forward_enabled
       end
     end
   end
