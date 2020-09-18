@@ -16,14 +16,13 @@ module STouchRemote
     # @return [String] filename of newly created file
     def self.download(url, basename: nil)
       uri = URI(url)
+      resp = HTTParty.get(uri)
+      return nil if resp.code != 200
+
+      ext = resp.headers['content-type'].split('/').last
       basename ||= uri.path.split('/').last
       basename = basename.tr(' ', '_')
-      fname = File.join(SAVE_DIR, "#{PREFIX}#{basename}")
-      puts "fname: #{fname}"
-
-      resp = HTTParty.get(uri)
-      p resp.code
-      return nil if resp.code != 200
+      fname = File.join(SAVE_DIR, "#{PREFIX}#{basename}.#{ext}")
 
       File.open(fname, 'wb') do |file|
         file.write(resp.body)
