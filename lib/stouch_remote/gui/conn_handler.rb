@@ -27,7 +27,7 @@ module STouchRemote
         app.source.account = now_playing['sourceAccount']
 
         case source
-        when 'STANDBY'
+        when 'INVALID_SOURCE', 'STANDBY'
           app.main_window.status = :standby
         when 'DEEZER'
           status = handle_now_playing_data(now_playing)
