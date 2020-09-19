@@ -4,6 +4,7 @@ module STouchRemote
   class Gui
     class MainWindow < Gtk::ApplicationWindow
       attr_reader :conn
+      attr_reader :status
 
       type_register
 
@@ -38,9 +39,8 @@ module STouchRemote
         @account = nil
         @art_url = nil
         @do_not_reemit_volume = false
-        @playing = false
+        @status = :standby
         @playing_timeout = nil
-        @playing_data = Data::Playing.new
 
         connect_menu
         connect_volume
@@ -48,48 +48,19 @@ module STouchRemote
       end
 
       def playing?
-        @playing
+        @status == :playing
       end
 
-      def playing=(val)
-        @playing = val
-
-        if @playing_timeout.nil? && playing?
-          @playing_timeout = GLib::Timeout.add(1000) do
-            return false unless playing?
-
-            @playing_data.time += 1
-            handle_time
-          end
-        elsif !playing?
-          @playing_timeout = nil
-        end
-
-        true
-      end
-
-      def set_source(type, data: nil)
-        @playing_data = data
-
-        case type
+      def status=(status)
+        @status = status
+        case status
         when :standby
-          title_label.text = 'No title'
-          title_image.stock = Gtk::Stock::MISSING_IMAGE
-          play_pause_button.child.stock = Gtk::Stock::MEDIA_PLAY
-          self.playing = false
-        when :playing, :pause
-          label = "<b>#{data.track}</b>\n#{data.artist}\n#{data.album}"
-          title_label.markup = label
-          play_pause_button.child.stock = if type == :pause
-                                            self.playing = false
-                                            Gtk::Stock::MEDIA_PLAY
-                                          else
-                                            self.playing = true
-                                            Gtk::Stock::MEDIA_PAUSE
-                                          end
-          handle_navigation_buttons
-          handle_time
-          cache_art_url
+          standby
+        when :playing
+          play_pause
+          handle_playing_timeout
+        when :pause
+          play_pause
         end
       end
 
@@ -180,7 +151,7 @@ module STouchRemote
       end
 
       def cache_art_url
-        data = @playing_data
+        data = application.playing_data
         return if @art_url == data.art_url
 
         conn.logger.info { 'Download art at %s' % data.art_url }
@@ -191,14 +162,21 @@ module STouchRemote
       end
 
       def handle_navigation_buttons
-        prev_button.sensitive = @playing_data.backward_enabled
-        next_button.sensitive = @playing_data.forward_enabled
+        prev_button.sensitive = application.playing_data.backward_enabled
+        next_button.sensitive = application.playing_data.forward_enabled
       end
 
       def handle_time
-        elapsed_time_label.text = data_to_time(@playing_data.time)
-        total_time_label.text = data_to_time(@playing_data.total_time)
-        time_progressbar.fraction = @playing_data.time.to_f / @playing_data.total_time
+        data = application.playing_data
+        elapsed_time_label.text = data_to_time(data.time)
+        total_time_label.text = data_to_time(data.total_time)
+        time_progressbar.fraction = data.time.to_f / data.total_time
+      end
+
+      def reset_time
+        elapsed_time_label.text = ''
+        total_time_label.text = ''
+        time_progressbar.fraction = 0.0
       end
 
       def data_to_time(value)
@@ -209,6 +187,42 @@ module STouchRemote
           '%02u:%02u:%02u' % [hour, min, sec]
         else
           '%02u:%02u' % [min, sec]
+        end
+      end
+
+      def standby
+        title_label.text = 'No title'
+        title_image.stock = Gtk::Stock::MISSING_IMAGE
+        play_pause_button.child.stock = Gtk::Stock::MEDIA_PLAY
+        reset_time
+      end
+
+      def play_pause
+        data = application.playing_data
+        label = "<b>#{data.track}</b>\n#{data.artist}\n#{data.album}"
+        title_label.markup = label
+        play_pause_button.child.stock = if type == :pause
+                                          Gtk::Stock::MEDIA_PLAY
+                                        else
+                                          Gtk::Stock::MEDIA_PAUSE
+                                        end
+        handle_navigation_buttons
+        handle_time
+        cache_art_url
+      end
+
+      def handle_playing_timeout
+        if @playing_timeout.nil? && playing?
+          @playing_timeout = GLib::Timeout.add(1000) do
+            return false unless playing?
+
+            application.playing_data.time += 1
+            handle_time
+
+            true
+          end
+        elsif !playing?
+          @playing_timeout = nil
         end
       end
     end

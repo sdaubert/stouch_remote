@@ -5,21 +5,21 @@ module STouchRemote
     class ConnHandler < Connection::BaseHandler
       attr_accessor :app
 
+      private
+
       def info(xml)
         app.logger.debug { "#{self.class}#info" }
         get_device_id(xml) if conn.device_id.nil?
 
-        type = xml.xpath('//type').first.text
         ipaddr = xml.xpath('//ipAddress').first.text
-
-        # device_name = "#{name} (type: #{type}, id: #{conn.device_id})"
         device_name = "#{conn.name} (#{ipaddr})"
-        app.logger.debug { 'Device name: %s' % device_name }
+
+        conn.logger.debug { 'Device name: %s' % device_name }
         app.main_window.device_name_label.text = device_name
       end
 
       def now_playing(xml)
-        app.logger.debug { "#{self.class}#now_playing" }
+        conn.logger.debug { "#{self.class}#now_playing" }
 
         now_playing = xml.xpath('//nowPlaying').first
         source = now_playing['source']
@@ -28,11 +28,10 @@ module STouchRemote
 
         case source
         when 'STANDBY'
-          app.main_window.set_source(:standby)
+          app.main_window.status = :standby
         when 'DEEZER'
-          data = now_playing_data(now_playing)
-
-          app.main_window.set_source(data.status, data: data)
+          status = handle_now_playing_data(now_playing)
+          app.main_window.status = status
         end
       end
 
@@ -44,8 +43,6 @@ module STouchRemote
         app.main_window.volume_button_value = value
       end
 
-      private
-
       def get_device_id(xml)
         app.logger.debug { 'Get deviceID' }
 
@@ -55,24 +52,49 @@ module STouchRemote
         name = xml.xpath('//name').first.text
         conn.name = name
 
-        app.logger.debug { 'deviceID: %s' % conn.device_id }
+        conn.logger.debug { 'deviceID: %s' % conn.device_id }
       end
 
-      def now_playing_data(xml)
-        track = (xml > 'track').text
-        artist = (xml > 'artist').text
-        album = (xml > 'album').text
-        art_url = (xml > 'art').text
-        status = (xml > 'playStatus').text == 'PAUSE_STATE' ? :pause : :playing
+      def handle_now_playing_data(xml)
+        data = app.playing_data
+        track_id = (xml > 'trackID').text.to_i
+        data.status = get_status(xml)
+        data.time, data.total_time = get_time(xml)
 
-        forward_enabled = !(xml > 'skipEnabled').empty?
-        backward_enabled = !(xml > 'skipPreviousEnabled').empty?
+        return data.status if data.track_id == track_id
 
-        time = (xml > 'time').first
-        elapsed = time.text.to_i
-        total = time['total'].to_i
+        data.track_id = track_id
+        data.track = from_xml_node(xml, 'track')
+        data.artist = from_xml_node(xml, 'artist')
+        data.album = from_xml_node(xml, 'album')
+        data.art_url = from_xml_node(xml, 'art')
 
-        Data::Playing.new(status, track, artist, album, art_url, forward_enabled, backward_enabled, elapsed, total)
+        data.forward_enabled = node_present?(xml, 'skipEnabled')
+        data.backward_enabled = node_present?(xml, 'skipPreviousEnabled')
+
+        conn.logger.info { "now playing #{data.track} (#{data.album}) - #{data.artist}" }
+
+        data.status
+      end
+
+      def from_xml_node(xml, node_name)
+        (xml > node_name).text
+      end
+
+      def node_present?(xml, node_name)
+        !(xml > node_name).empty?
+      end
+
+      def get_time(xml)
+        time_node = (xml > 'time').last
+        elapsed = time_node.text.to_i
+        total = time_node['total'].to_i
+
+        [elapsed, total]
+      end
+
+      def get_status(xml)
+        from_xml_node(xml, 'playStatus') == 'PAUSE_STATE' ? :pause : :playing
       end
     end
   end

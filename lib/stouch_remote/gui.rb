@@ -10,6 +10,7 @@ module STouchRemote
     attr_reader :main_window
     attr_reader :connected
     attr_reader :source
+    attr_reader :playing_data
 
     # Clean up art files evry 30 min
     CLEAN_TMP_PERIOD = 30 * 60
@@ -24,6 +25,7 @@ module STouchRemote
       @main_window = nil
       @connected = false
       @source = Data::Source.new
+      @playing_data = Data::Playing.new
 
       connect_startup
       connect_activate
