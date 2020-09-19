@@ -99,6 +99,8 @@ module STouchRemote
 
       def get_time(xml)
         time_node = (xml > 'time').last
+        return [0, 0] if time_node.nil?
+
         elapsed = time_node.text.to_i
         total = time_node['total'].to_i
 
