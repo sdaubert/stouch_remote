@@ -83,9 +83,9 @@ module STouchRemote
       def on_connect
         conn.start
         conn.send('info')
+        info('Connected to %s' % conn.name)
         conn.volume
         conn.send('now_playing')
-        info('Connected to %s' % conn.name)
         application.connected = true
 
         conn.wait_async_events
@@ -152,6 +152,10 @@ module STouchRemote
 
       def cache_art_url
         data = application.playing_data
+        if data.art_url == ''
+          title_image.stock = Gtk::Stock::MISSING_IMAGE
+          return
+        end
         return if @art_url == data.art_url
 
         conn.logger.info { 'Download art at %s' % data.art_url }
@@ -195,6 +199,7 @@ module STouchRemote
         title_image.stock = Gtk::Stock::MISSING_IMAGE
         play_pause_button.child.stock = Gtk::Stock::MEDIA_PLAY
         reset_time
+        application.logger.info { 'Status: STANDBY'}
       end
 
       def play_pause
