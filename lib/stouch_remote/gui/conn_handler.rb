@@ -64,17 +64,29 @@ module STouchRemote
         return data.status if data.track_id == track_id
 
         data.track_id = track_id
-        data.track = from_xml_node(xml, 'track')
-        data.artist = from_xml_node(xml, 'artist')
-        data.album = from_xml_node(xml, 'album')
-        data.art_url = from_xml_node(xml, 'art')
-
-        data.forward_enabled = node_present?(xml, 'skipEnabled')
-        data.backward_enabled = node_present?(xml, 'skipPreviousEnabled')
+        track_data(data, xml)
+        nav_data(data, xml)
 
         conn.logger.info { "now playing #{data.track} (#{data.album}) - #{data.artist}" }
 
         data.status
+      end
+
+      def track_data(data, xml)
+        data.track = escape_ampersand(from_xml_node(xml, 'track'))
+        data.artist = escape_ampersand(from_xml_node(xml, 'artist'))
+        data.album = escape_ampersand(from_xml_node(xml, 'album'))
+        data.art_url = from_xml_node(xml, 'art')
+      end
+
+      def nav_data(data, xml)
+        data.forward_enabled = node_present?(xml, 'skipEnabled')
+        data.backward_enabled = node_present?(xml, 'skipPreviousEnabled')
+      end
+
+      def escape_ampersand(text)
+        text.gsub!(/&/, '&amp;')
+        text
       end
 
       def from_xml_node(xml, node_name)
