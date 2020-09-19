@@ -25,11 +25,11 @@ module STouchRemote
       end
 
       def on_error(event)
-        conn.logger.warning { "on_error: #{event.inspect}" }
+        conn.logger.warn { "on_error: #{event.inspect}" }
       end
 
       def on_close(event)
-        conn.logger.warning { "on_close: #{event.inspect}" }
+        conn.logger.warn { "on_close: #{event.inspect}" }
       end
 
       def info(xml); end
