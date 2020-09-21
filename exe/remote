@@ -5,7 +5,7 @@ require 'stouch_remote'
 require 'stouch_remote/gui'
 
 logger = Logger.new(STDOUT)
-logger.level = Logger::DEBUG#INFO
+logger.level = Logger::INFO
 
 conn = STouchRemote::Connection.new('192.168.1.70', 8080, logger: logger)
 ui = STouchRemote::Gui.new(conn, logger)
